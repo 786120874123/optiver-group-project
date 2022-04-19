@@ -244,7 +244,7 @@ class CNN(nn.Module):
         self.cat_dim = emb_dim * len(n_categories)
         self.dropout_cat = nn.Dropout(dropout_cat)
 
-    def forward(self, x_num, x_cat):
+    def forward(self, x_num):
         # embs = [embedding(x_cat[:, i]) for i, embedding in enumerate(self.embs)]
         # x_cat_emb = self.dropout_cat(torch.cat(embs, 1))
         # x = torch.cat([x_num, x_cat_emb], 1)
@@ -400,7 +400,6 @@ def predict_nn(X: pd.DataFrame,
                 for m in model:
                     output = m(x_num)
                     outputs.append(output.detach().cpu().numpy())
-
             if ensemble_method == 'median':
                 pred = np.nanmedian(np.array(outputs), axis=0)
             else:
