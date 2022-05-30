@@ -20,6 +20,7 @@ from sklearn.manifold import TSNE
 from sklearn.model_selection import GroupKFold
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import minmax_scale
+from sklearn import metrics
 from tqdm import tqdm_notebook as tqdm
 
 ###
@@ -570,6 +571,25 @@ def reconstruct_time_id_order():
 def rmspe(y_true, y_pred):
     return (np.sqrt(np.mean(np.square((y_true - y_pred) / y_true))))
 
+def mae(y_true, y_pred):
+    return metrics.mean_absolute_error(y_true, y_pred)
+
+def r2_score(y_true, y_pred):
+    return metrics.r2_score(y_true, y_pred)
+
+def adjusted_r2(y_true, y_pred, p=584):
+    n=len(y_true)
+    r2=r2_score(y_true,y_pred)
+    adj_r2=1-(1-r2)*(n-1)/(n-p-1)
+    return adj_r2
+
+def da(y_true, y_pred):
+    len=len(y_true)
+    d_a=1
+    for i in range (len-1):
+        if (y_true[i+1]-y_true[i])*(y_pred[i+1]-y_true[i])>0:
+            d_a=d_a+1
+    return d_a/len
 
 def feval_RMSPE(preds, train_data):
     labels = train_data.get_label()
@@ -1161,6 +1181,10 @@ if __name__ == '__main__':
         predictions['gbdt'] = gbdt_preds
         prediction_weights['gbdt'] = 1
         print(f"# TEST GBDT RMSPE: {rmspe(df_test['target'] , gbdt_preds)}")
+        print(f"# TEST GBDT MAE: {mae(df_test['target'] , gbdt_preds)}")
+        print(f"# TEST GBDT R2Score: {r2_score(df_test['target'] , gbdt_preds)}")
+        print(f"# TEST GBDT Adjusted R2Score: {adjusted_r2(df_test['target'] , gbdt_preds)}")
+        print(f"# TEST GBDT DA: {da(df_test['target'] , gbdt_preds)}")
     if PREDICT_MLP:
         try:
             mlp_model_paths =[]
@@ -1171,6 +1195,10 @@ if __name__ == '__main__':
             predictions['mlp'] = mlp_preds
             prediction_weights['mlp'] = 1
             print(f"# TEST MLP RMSPE: {rmspe(df_test['target'], mlp_preds )}")
+            print(f"# TEST MLP MAE: {mae(df_test['target'] , mlp_preds)}")
+            print(f"# TEST MLP R2Score: {r2_score(df_test['target'] , mlp_preds)}")
+            print(f"# TEST MLP Adjusted R2Score: {adjusted_r2(df_test['target'] , mlp_preds)}")
+            print(f"# TEST MLP DA: {da(df_test['target'] , mlp_preds)}")
         except:
             print(f'failed to predict mlp: {traceback.format_exc()}')
     if PREDICT_CNN:
@@ -1183,6 +1211,10 @@ if __name__ == '__main__':
             predictions['cnn'] = cnn_preds
             prediction_weights['cnn'] = 1
             print(f"# TEST CNN RMSPE: {rmspe(df_test['target'], cnn_preds )}")
+            print(f"# TEST CNN MAE: {mae(df_test['target'] , cnn_preds)}")
+            print(f"# TEST CNN R2Score: {r2_score(df_test['target'] , cnn_preds)}")
+            print(f"# TEST CNN Adjusted R2Score: {adjusted_r2(df_test['target'] , cnn_preds)}")
+            print(f"# TEST CNN DA: {da(df_test['target'] , cnn_preds)}")
         except:
             print(f'failed to predict mlp: {traceback.format_exc()}')
     overall_preds = None
@@ -1194,6 +1226,10 @@ if __name__ == '__main__':
         else:
             overall_preds += preds * w
     print(f"# TEST Ensemble RMSPE: {rmspe(df_test['target'], overall_preds)}")
+    print(f"# TEST Ensemble MAE: {mae(df_test['target'] , overall_preds)}")
+    print(f"# TEST Ensemble R2Score: {r2_score(df_test['target'] , overall_preds)}")
+    print(f"# TEST Ensemble Adjusted R2Score: {adjusted_r2(df_test['target'] , overall_preds)}")
+    print(f"# TEST Ensemble DA: {da(df_test['target'] , overall_preds)}")
     # if PREDICT_MLP and mlp_model:
     #     try:
     #         mlp_preds = predict_nn(X_test, mlp_model, scaler, device, ensemble_method=ENSEMBLE_METHOD)
